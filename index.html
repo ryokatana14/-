@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>満足度アンケート</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+      color: #333;
+      text-align: center;
+      overflow: hidden;
+    }
+    .page {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      opacity: 0;
+      animation: fadeIn 1.5s forwards;
+      position: relative;
+    }
+    .page.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    #page1 label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    #page1 select {
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin: 0 5px;
+      font-size: 16px;
+    }
+    .option-button, button.next-btn {
+      background: #f06292;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .options {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    #transitionPage {
+      background: linear-gradient(135deg, #e1f5fe, #ffe0b2);
+    }
+    #curtain {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+      overflow: hidden;
+    }
+    .curtain-panel {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+          to right,
+          #b30000 0%,
+          #cc0000 20%,
+          #b30000 40%,
+          #cc0000 60%,
+          #b30000 80%,
+          #cc0000 100%
+        ),
+        url('https://www.transparenttextures.com/patterns/fabric-dark.png');
+      background-blend-mode: overlay;
+      background-size: 200px 200px;
+      box-shadow: inset 10px 0 20px rgba(0, 0, 0, 0.3), 5px 0 10px rgba(0, 0, 0, 0.2);
+      border-right: 2px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.1s ease-out;
+    }
+    .curtain-panel.left {
+      left: 0;
+      transform-origin: top left;
+    }
+    .curtain-panel.right {
+      right: 0;
+      transform-origin: top right;
+    }
+    @keyframes curtainOpenLeft {
+      0% { transform: skew(0deg) translateX(0) rotate(0deg); }
+      25% { transform: skew(-10deg) translateX(-25%) rotate(2deg) scaleY(1.02); }
+      50% { transform: skew(-15deg) translateX(-50%) rotate(-1deg) scaleY(1.01); }
+      100% { transform: skew(-30deg) translateX(-100%) rotate(0deg); }
+    }
+    @keyframes curtainOpenRight {
+      0% { transform: skew(0deg) translateX(0) rotate(0deg); }
+      25% { transform: skew(10deg) translateX(25%) rotate(-2deg) scaleY(1.02); }
+      50% { transform: skew(15deg) translateX(50%) rotate(1deg) scaleY(1.01); }
+      100% { transform: skew(30deg) translateX(100%) rotate(0deg); }
+    }
+    #birthdayPage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #fff7e6, #ffe4e1);
+    }
+    #birthdayPage::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: 0.5;
+      animation: glitter 3s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes glitter {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+    #birthday-message {
+      font-size: 32px;
+      font-family: 'Pacifico', cursive;
+      color: #d81b60;
+      white-space: nowrap;
+      position: relative;
+      z-index: 2;
+    }
+    #birthday-message .letter {
+      opacity: 0;
+      display: inline-block;
+      transform: translateX(20px);
+      animation: fadeInLetter 0.5s forwards;
+    }
+    @keyframes fadeInLetter {
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .cracker {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      animation: crackerSpark 3s ease-in-out infinite;
+      z-index: 2;
+    }
+    #crackerLeft {
+      top: 10%;
+      left: 10%;
+      background-image: url('https://cdn.pixabay.com/photo/2017/01/31/16/27/confetti-2025668_1280.png');
+    }
+    #crackerRight {
+      top: 10%;
+      right: 10%;
+      background-image: url('https://cdn.pixabay.com/photo/2017/01/31/16/27/confetti-2025668_1280.png');
+    }
+    @keyframes crackerSpark {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0; }
+    }
+    .balloon {
+      position: absolute;
+      bottom: -100px;
+      width: 40px;
+      height: 60px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      animation: balloonRise 5s linear infinite;
+      z-index: 2;
+    }
+    .balloon:nth-child(odd) {
+      animation-duration: 6s;
+    }
+    @keyframes balloonRise {
+      0% { transform: translateX(0) translateY(0); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateX(20px) translateY(-120vh); opacity: 0; }
+    }
+    #cake {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 100px;
+      background-image: url('https://cdn.pixabay.com/photo/2013/07/12/18/57/birthday-cake-153151_1280.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      animation: cakeBounce 2s ease-in-out infinite;
+      z-index: 2;
+    }
+    @keyframes cakeBounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: #ffeb3b;
+      opacity: 0.9;
+      transform: rotate(0deg);
+      animation: confettiFall 3s linear infinite;
+      z-index: 2;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+    #video-section {
+      background: #fff;
+    }
+    iframe {
+      max-width: 90%;
+      height: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .birthdate-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    .birthdate-container select {
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    .birthdate-container span {
+      font-size: 18px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="page active" id="page1">
+    <label>生年月日を教えてください</label>
+    <br>
+    <div class="birthdate-container">
+      <select id="birthMonth" required>
+        <option value="">月</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+      </select>
+      <span>月</span>
+      <select id="birthDay" required>
+        <option value="">日</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+        <option value="17">17</option>
+        <option value="18">18</option>
+        <option value="19">19</option>
+        <option value="20">20</option>
+        <option value="21">21</option>
+        <option value="22">22</option>
+        <option value="23">23</option>
+        <option value="24">24</option>
+        <option value="25">25</option>
+        <option value="26">26</option>
+        <option value="27">27</option>
+        <option value="28">28</option>
+        <option value="29">29</option>
+        <option value="30">30</option>
+        <option value="31">31</option>
+      </select>
+      <span>日</span>
+    </div>
+    <br>
+    <button class="next-btn" onclick="nextPage()">次へ</button>
+  </div>
+
+  <div class="page" id="page2">
+    <div>
+      <label>ご一緒に来ていただいたのはどなたですか？</label>
+      <div class="options">
+        <button class="option-button" onclick="selectOption('partner', '家族')">家族</button>
+        <button class="option-button" onclick="selectOption('partner', '友人')">友人</button>
+        <button class="option-button" onclick="selectOption('partner', '恋人')">恋人</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page3">
+    <div>
+      <label>その人のことはどれくらい好きですか？</label>
+      <div class="options">
+        <button class="option-button" onclick="selectOption('affection', '大好き')">大好き</button>
+        <button class="option-button" onclick="selectOption('affection', 'まぁまぁ好き')">まぁまぁ好き</button>
+        <button class="option-button" onclick="selectOption('affection', '普通')">普通</button>
+        <button class="option-button" onclick="selectOption('affection', '苦手')">苦手</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page4">
+    <div>
+      <label>本日はご満足いただける時間を過ごせましたか？</label>
+      <div class="options">
+        <button class="option-button" onclick="selectOption('satisfaction', 'とても')">とても</button>
+        <button class="option-button" onclick="selectOption('satisfaction', 'はい')">はい</button>
+        <button class="option-button" onclick="selectOption('satisfaction', 'いいえ')">いいえ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="transitionPage">
+    <button class="next-btn" onclick="openCurtain()">進む</button>
+  </div>
+
+  <div id="curtain">
+    <div class="curtain-panel left"></div>
+    <div class="curtain-panel right"></div>
+  </div>
+
+  <div class="page" id="birthdayPage">
+    <div id="birthday-message">
+      <span class="letter" style="animation-delay: 0s;">お</span>
+      <span class="letter" style="animation-delay: 0.1s;">誕</span>
+      <span class="letter" style="animation-delay: 0.2s;">生</span>
+      <span class="letter" style="animation-delay: 0.3s;">日</span>
+      <span class="letter" style="animation-delay: 0.4s;">お</span>
+      <span class="letter" style="animation-delay: 0.5s;">め</span>
+      <span class="letter" style="animation-delay: 0.6s;">で</span>
+      <span class="letter" style="animation-delay: 0.7s;">と</span>
+      <span class="letter" style="animation-delay: 0.8s;">う</span>
+      <span class="letter" style="animation-delay: 0.9s;">！</span>
+    </div>
+    <div id="crackerLeft" class="cracker"></div>
+    <div id="crackerRight" class="cracker"></div>
+    <div class="balloon" style="left: 20%; animation-delay: 0s; background-image: url('https://cdn.pixabay.com/photo/2013/07/13/12/46/balloon-159363_1280.png');"></div>
+    <div class="balloon" style="left: 40%; animation-delay: 1s; background-image: url('https://cdn.pixabay.com/photo/2013/07/13/12/46/balloon-159363_1280.png');"></div>
+    <div class="balloon" style="left: 60%; animation-delay: 2s; background-image: url('https://cdn.pixabay.com/photo/2013/07/13/12/46/balloon-159363_1280.png');"></div>
+    <div class="balloon" style="left: 80%; animation-delay: 3s; background-image: url('https://cdn.pixabay.com/photo/2013/07/13/12/46/balloon-159363_1280.png');"></div>
+    <div id="cake"></div>
+    <div id="confettiContainer"></div>
+  </div>
+
+  <div class="page" id="video-section">
+    <iframe width="640" height="360" src="https://www.youtube.com/embed/eTlixyL6WVQ" frameborder="0" allowfullscreen></iframe>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    let answers = {};
+
+    function nextPage() {
+      document.getElementById(`page${currentPage}`).classList.remove('active');
+      currentPage++;
+      if (currentPage <= 4) {
+        document.getElementById(`page${currentPage}`).classList.add('active');
+      } else {
+        document.getElementById('transitionPage').classList.add('active');
+      }
+    }
+
+    function selectOption(key, value) {
+      answers[key] = value;
+      nextPage();
+    }
+
+    function openCurtain() {
+      document.getElementById('transitionPage').classList.remove('active');
+      const curtain = document.getElementById('curtain');
+      curtain.style.display = 'block';
+      const leftPanel = document.querySelector('.curtain-panel.left');
+      const rightPanel = document.querySelector('.curtain-panel.right');
+      leftPanel.style.animation = 'curtainOpenLeft 1.5s forwards';
+      rightPanel.style.animation = 'curtainOpenRight 1.5s forwards';
+      setTimeout(() => {
+        curtain.style.display = 'none';
+        document.getElementById('birthdayPage').classList.add('active');
+        startBirthdayEffects();
+      }, 1500);
+    }
+
+    function startBirthdayEffects() {
+      const container = document.getElementById('confettiContainer');
+      for (let i = 0; i < 50; i++) {
+        let confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = Math.random() * 100 + 'vh';
+        confetti.style.backgroundColor = ['#ffeb3b', '#ffd700', '#87cefa'][i % 3];
+        confetti.style.animationDelay = (Math.random() * 3) + 's';
+        container.appendChild(confetti);
+      }
+      setTimeout(() => {
+        document.getElementById('birthdayPage').classList.remove('active');
+        document.getElementById('video-section').classList.add('active');
+      }, 7000);
+    }
+  </script>
+</body>
+</html>
